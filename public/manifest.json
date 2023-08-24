@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "TalentBoard - New tab",
+  "short_name": "Talent Board",
+  "description": "Opening a new tab isn't boring anymore",
+  "version": "0.1.0",
+  "icons": {
+    "512": "icon-512.png"
+  },
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs"
+  ]
+}
