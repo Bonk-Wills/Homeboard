@@ -1,36 +1,29 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Responsive, WidthProvider } from 'react-grid-layout'
+import { ToastContainer } from 'react-toastify'
+import { v4 as uuidv4 } from 'uuid';
 import styled from 'styled-components'
 
-import { MoreOutlined } from '@ant-design/icons'
+import { Menu } from '@mantine/core';
+import { SettingOutlined, EditOutlined, SlidersOutlined, DeleteOutlined } from '@ant-design/icons';
 
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
+import 'react-toastify/dist/ReactToastify.css';
 
 import AddButton from './common/AddButton'
-import TimeCountdown from './widgets/TimeCountdown'
-import Test from './widgets/Test'
+import EditButton from './common/EditButton'
+import WidgetModals from './settings/WidgetModals'
+import WidgetPositionModal from './settings/WidgetPositionModal'
+
+import App from './widgets/App'
+import DateTime from './widgets/DateTime'
+import Weather from './widgets/Weather'
+import AgeCountdown from './widgets/AgeCountdown'
+import ArduinoSwitch from './widgets/ArduinoSwitch'
+import ArduinoSensor from './widgets/ArduinoSensor'
 
 const ResponsiveReactGridLayout = WidthProvider(Responsive)
-
-const Header = styled.div`
-  background-color: ${({ cardBgColor }) => cardBgColor};
-  border-radius: 3px 3px 0 0;
-  width: 100%;
-  height: 50px;
-`
-
-const WidgetName = styled.div`
-  height: 100%;
-  display: flex;
-  align-items: center;
-  margin-left: 20px;
-  font-family: Roboto;
-  color: white;
-  letter-spacing: .02em;
-  font-size: 1.1rem;
-  font-weight: 400;
-`
 
 const ActionButton = styled.div`
   position: absolute;
@@ -42,41 +35,40 @@ const ActionButton = styled.div`
   cursor: pointer;
 `
 
-const MenuIcon = styled(MoreOutlined)`
-  color: white;
+const SettingsIcon = styled(SettingOutlined)`
+  color: ${({ theme }) => theme.colors.default1};
   font-size: 20px;
 `
 
-const Menu = styled.div`
-  background-color: white;
-  position: absolute;
-  top: 40px;
-  right: -10px;
-  width: 120px;
-  cursor: pointer;
-`
-
-const ItemMenu = styled.div`
-  border-style: solid;
-  border-width: 0px 0px 1px 0px;
-  padding: 5px;
-`
-
 const ReactGridItem = styled.div`
-  display: grid;
+  border-radius: 1rem !important;
   transition: all 200ms ease;
   transition-property: left, top;
-  background: rgba(0, 132, 255, 0.473);
+
+  .react-resizable-handle {
+    bottom: 5px !important;
+    right: 5px !important;
+  }
 `
 
-const Dashboard = ({ cardBgColor }) => {
-  const [showDropdown, setShowDropdown] = useState(false)
-  const [showMenu, setShowMenu] = useState(null)
+const Dashboard = ({ theme }) => {
+  const [isEditable, setIsEditable] = useState(false)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(null)
+  const [isPositionModalOpen, setIsPositionModalOpen] = useState(null)
   const [layouts, setLayouts] = useState(null)
-  const [widgetArray, setWidgetArray] = useState([
-    { i: 0, name: 'Time Countdown', content: <TimeCountdown />, x: 0, y: 0, w: 2, h: 2 },
-    { i: 1, name: 'Test', content: <Test />, x: 2, y: 0, w: 2, h: 2 },
-  ])
+  let getWidgets = window.localStorage.getItem('widgets')
+  const [widgetArray, setWidgetArray] = useState(getWidgets ? JSON.parse(getWidgets) : [])
+  //console.log("OH: ", theme)
+  //console.log("OUI: ", widgetArray)
+
+  useEffect(() => {
+    if (isEditable) {
+      window.onbeforeunload = () => true;
+    } else {
+      window.onbeforeunload = null;
+    }
+  }, [isEditable]);
 
   const handleModify = (layouts, layout) => {
     const tempArray = widgetArray
@@ -84,8 +76,8 @@ const Dashboard = ({ cardBgColor }) => {
     layouts?.map((position) => {
       tempArray[Number(position.i)].x = position.x
       tempArray[Number(position.i)].y = position.y
-      tempArray[Number(position.i)].width = position.w
-      tempArray[Number(position.i)].height = position.h
+      tempArray[Number(position.i)].w = position.w
+      tempArray[Number(position.i)].h = position.h
     })
     setWidgetArray(tempArray)
   }
@@ -96,26 +88,87 @@ const Dashboard = ({ cardBgColor }) => {
     tempArray.splice(index, 1)
     setWidgetArray(tempArray)
   }
+  
 
-  const handleAdd = () => {
-    setShowDropdown(!showDropdown)
-    setWidgetArray([
+  const handleAdd = (newWidget) => {
+    const tempArray = [
       ...widgetArray,
-      { i: widgetArray.length, name: 'Test', content: <Test />, x: 0, y: 0, w: 2, h: 2 },
-    ])
+      { i: uuidv4(), name: newWidget.name, type: newWidget.type, settings: newWidget.settings, x: 0, y: 0, w: 2, h: 1 },
+    ]
+    setWidgetArray(tempArray)
+    setIsAddModalOpen(false)
   }
+
+  const widgetRenderer = (widget) => {
+    switch (widget.type) {
+      case 'app':
+        return <App isEditable={isEditable} settings={widget.settings} theme={theme} />
+      case 'date-time':
+        return <DateTime settings={widget.settings} theme={theme} />
+      case 'weather':
+        return <Weather settings={widget.settings} theme={theme} />
+      case 'age-countdown':
+        return <AgeCountdown settings={widget.settings} theme={theme} />
+      case 'arduino-switch':
+        return <ArduinoSwitch settings={widget.settings} theme={theme} />
+      case 'arduino-sensor':
+        return <ArduinoSensor settings={widget.settings} theme={theme} />
+      default:
+        return null;
+    }
+  };
 
   return (
     <>
-      <AddButton handleAdd={handleAdd} />
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggablez
+        pauseOnHover
+      />
+      <EditButton
+        isEditable={isEditable}
+        setIsEditable={setIsEditable}
+        widgetArray={widgetArray}
+      />
+      {isEditable && (
+        <AddButton
+          isModalOpen={isAddModalOpen}
+          setIsModalOpen={setIsAddModalOpen}
+          handleAdd={handleAdd}
+          theme={theme}
+        />
+      )}
+      <WidgetModals
+        isEditModalOpen={isEditModalOpen}
+        setIsEditModalOpen={setIsEditModalOpen}
+        widgetArray={widgetArray}
+        setWidgetArray={setWidgetArray}
+        theme={theme}
+      />
+      <WidgetPositionModal
+        isPositionModalOpen={isPositionModalOpen}
+        setIsPositionModalOpen={setIsPositionModalOpen}
+        widgetArray={widgetArray}
+        setWidgetArray={setWidgetArray}
+        theme={theme}
+      />
       <ResponsiveReactGridLayout
         onLayoutChange={handleModify}
         verticalCompact={true}
         layout={layouts}
+        isDraggable={isEditable}
+        isResizable={isEditable}
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
         preventCollision={false}
-        cols={{ lg: 8, md: 8, sm: 4, xs: 2, xxs: 2 }}
+        cols={{ lg: 10, md: 8, sm: 6, xs: 2, xxs: 2 }}
         autoSize={true}
+        rowHeight={120}
         margin={{
           lg: [20, 20],
           md: [20, 20],
@@ -127,6 +180,7 @@ const Dashboard = ({ cardBgColor }) => {
         {widgetArray?.map((widget, index) => {
           return (
             <ReactGridItem
+              style={{cursor: isEditable ? 'grab' : ''}}
               key={index}
               data-grid={{
                 x: widget?.x,
@@ -138,25 +192,27 @@ const Dashboard = ({ cardBgColor }) => {
                 maxW: Infinity,
                 minH: 1,
                 maxH: Infinity,
-                isDraggable: true,
-                isResizable: true,
               }}
             >
-              <Header cardBgColor={cardBgColor}>
-                <WidgetName>{widget.name}</WidgetName>
-                <ActionButton
-                  onClick={() => showMenu === widget.i ? setShowMenu(null) : setShowMenu(widget.i)
-                }>
-                  <MenuIcon />
-                </ActionButton>
-                {showMenu === widget.i && (
-                  <Menu>
-                    <ItemMenu>WIP</ItemMenu>
-                    <ItemMenu onClick={() => handleDelete(widget.i)}>Delete</ItemMenu>
-                  </Menu>
+              <Menu shadow="md" color={'white'} width={200}>
+                {isEditable && (
+                  <Menu.Target>
+                    <ActionButton>
+                      <SettingsIcon />
+                    </ActionButton>
+                  </Menu.Target>
                 )}
-              </Header>
-              {widget.content}
+
+                <Menu.Dropdown>
+                  <Menu.Label>Settings</Menu.Label>
+                  <Menu.Item onClick={() => setIsEditModalOpen(widget)} icon={<EditOutlined size={14} />}>Edit</Menu.Item>
+                  <Menu.Item onClick={() => setIsPositionModalOpen(widget)} icon={<SlidersOutlined size={14} />}>Change position</Menu.Item>
+                  <Menu.Divider />
+                  <Menu.Label>Danger zone</Menu.Label>
+                  <Menu.Item onClick={() => handleDelete(widget.i)} color="red" icon={<DeleteOutlined size={14} />}>Remove</Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+              {widgetRenderer(widget)}
             </ReactGridItem>
           )
         })}

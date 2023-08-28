@@ -44,8 +44,8 @@ const StyledBurger = styled.button`
   }
 `
 
-const MenuButton = ({ menuIsOpen, setMenuIsOpen }) => (
-  <StyledBurger menuIsOpen={menuIsOpen} onClick={() => setMenuIsOpen(!menuIsOpen)} >
+const MenuButton = ({ isOpenMenu, setIsOpenMenu }) => (
+  <StyledBurger menuIsOpen={isOpenMenu} onClick={() => setIsOpenMenu(!isOpenMenu)} >
     <div />
     <div />
     <div />

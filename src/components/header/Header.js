@@ -3,10 +3,10 @@ import styled from 'styled-components'
 
 import Typewriter from 'typewriter-effect'
 
-import { bgOptions } from 'components/header/bgOptions'
+import { bgOptions } from 'components/constants/bgOptions'
+import { defaultQuotes } from 'components/constants/defaultQuotes'
 import Settings from 'components/settings/Settings'
 import MenuButton from './MenuButton'
-import { quotes } from './quotes'
 
 const TypewriterContainer = styled.div`
   position: absolute;
@@ -45,29 +45,26 @@ const shuffle = (array) => {
   return (array)
 }
 
-const Header = ({ setCardBgColor }) => {
-  const [menuIsOpen, setMenuIsOpen] = useState(false)
-  const [selectedOption, setSelectedOption] = useState(
-      window.localStorage.getItem('background') ? window.localStorage.getItem('background') : bgOptions[0].value
-  )
+const Header = ({ theme, setTheme}) => {
+  const [isOpenMenu, setIsOpenMenu] = useState(false)
 
   return (
-    <HeaderContainer option={selectedOption} variant={getBackgroundVariation()}>
+    <HeaderContainer option={theme.background ? theme.background : bgOptions[0].value} variant={getBackgroundVariation()}>
       <MenuButton
-        menuIsOpen={menuIsOpen}
-        setMenuIsOpen={setMenuIsOpen}
+        isOpenMenu={isOpenMenu}
+        setIsOpenMenu={setIsOpenMenu}
       />
       <Settings
-        menuIsOpen={menuIsOpen}
-        selectedOption={selectedOption}
-        setSelectedOption={setSelectedOption}
-        setCardBgColor={setCardBgColor}
+        isOpenMenu={isOpenMenu}
+        setIsOpenMenu={setIsOpenMenu}
+        theme={theme}
+        setTheme={setTheme}
       />
 
       <TypewriterContainer>
         <Typewriter
           options={{
-            strings: shuffle(quotes),
+            strings: shuffle(theme.quotes ? JSON.parse(theme.quotes) : defaultQuotes),
             autoStart: true,
             loop: true,
             pauseFor: 2000,

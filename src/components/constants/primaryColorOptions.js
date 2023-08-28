@@ -1,0 +1,15 @@
+export const primaryColorOptions = [
+  { value: 'dark', label: 'Dark', icon: '🌑' },
+  { value: 'gray', label: 'Gray', icon: '🌚' },
+  { value: 'red', label: 'Red', icon: '🔴' },
+  { value: 'pink', label: 'Pink', icon: '🌸' },
+  { value: 'grape', label: 'Grape', icon: '🍇' },
+  { value: 'violet', label: 'Violet', icon: '🔮' },
+  { value: 'indigo', label: 'Indigo', icon: '🌌' },
+  { value: 'blue', label: 'Blue', icon: '🔵' },
+  { value: 'cyan', label: 'Cyan', icon: '💧' },
+  { value: 'teal', label: 'Teal', icon: '🦚' },
+  { value: 'green', label: 'Green', icon: '🟢' },
+  { value: 'yellow', label: 'Yellow', icon: '🟡' },
+  { value: 'orange', label: 'Orange', icon: '🟠' },
+]
